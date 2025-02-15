@@ -43,7 +43,7 @@ public class Kpanel extends JPanel {
     public static final FlatSVGIcon sendIcon = new FlatSVGIcon("svgs/send.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
 
     public Kpanel() {
-        connectToDatabase();
+       // connectToDatabase();
     }
 
     public void connectToDatabase() {

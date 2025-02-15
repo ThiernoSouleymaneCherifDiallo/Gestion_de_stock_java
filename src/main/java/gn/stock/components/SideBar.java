@@ -1,5 +1,8 @@
 package gn.stock.components;
 
+import gn.stock.panels.FournisseurPanel;
+import gn.stock.panels.ProduitPanel;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -10,7 +13,7 @@ class MainInterface extends JFrame {
     private JPanel contentPanel;
 
     public MainInterface() {
-        setTitle("Gestion des Congés");
+        setTitle("Gestion des Stocks");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -22,15 +25,16 @@ class MainInterface extends JFrame {
         sidePanel.setPreferredSize(new Dimension(200, getHeight()));
 
         // Ajout des boutons au panneau latéral
-        addButton("GESTION_CONGE");
-        addButton("EMPLOYER");
-        addButton("PARAMETRE");
+        addButton("GESTION_STOCK");
+        addButton("PRODUITS");
+        addButton("FOURNISSEURS");
         addButton("Deconnexion");
 
         // Création du panneau de contenu
         contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout());
         contentPanel.setBackground(Color.WHITE);
+
 
         // Ajout des panneaux à la fenêtre principale
         add(sidePanel, BorderLayout.WEST);
@@ -58,9 +62,16 @@ class MainInterface extends JFrame {
 
     private void updateContent(String text) {
         contentPanel.removeAll();
+
         JLabel label = new JLabel(text, SwingConstants.CENTER);
         label.setFont(new Font("Serif", Font.BOLD, 24));
-        contentPanel.add(label, BorderLayout.CENTER);
+        if(text == "PRODUITS"){
+            contentPanel.add(new ProduitPanel(), BorderLayout.CENTER);
+        }
+        else if(text == "FOURNISSEURS"){
+            contentPanel.add(new FournisseurPanel(), BorderLayout.CENTER);
+        }
+
         contentPanel.revalidate();
         contentPanel.repaint();
     }

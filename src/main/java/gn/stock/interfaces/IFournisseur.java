@@ -8,4 +8,5 @@ public interface IFournisseur {
     void deleteFournisseur();
 
     void viewFournisseur();
+
 }
