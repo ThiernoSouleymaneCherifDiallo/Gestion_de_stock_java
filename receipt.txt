@@ -1,0 +1,5 @@
+Reçu de Transaction
+ID de Transaction: 22
+Montant: DD
+Date: 23
+Merci pour votre dépôt !

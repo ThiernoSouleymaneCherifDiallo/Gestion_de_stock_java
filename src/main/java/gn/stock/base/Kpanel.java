@@ -1,70 +1,82 @@
 package gn.stock.base;
 
-import com.formdev.flatlaf.extras.FlatSVGIcon;
-
-import javax.swing.*;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.Properties;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import javax.swing.JPanel;
 
 public class Kpanel extends JPanel {
 
-    // Menu lefts elements
-    public static final String MENU_LEFT_ELEMENT_CLIENT = "Clients";
-    public static final String MENU_LEFT_ELEMENT_RESERVATION = "Réservations";
-    public static final String MENU_LEFT_ELEMENT_CHAMBRE = "Chambres";
-    public static final String MENU_LEFT_ELEMENT_EMPLOYEE = "Employees";
-    public static final String MENU_LEFT_ELEMENT_SERVICE = "Services";
-    public static final String MENU_LEFT_ELEMENT_FACTURE = "Factures";
-    public static final String MENU_LEFT_ELEMENT_STATISTIQUE = "Statistiques";
-    public static final String MENU_LEFT_ELEMENT_SETTINGS = "Paramètres";
-    public static final String MENU_LEFT_ELEMENT_LOGOUT = "Se Deconnecter";
-
-    // Tailles des icones de  menu et du menu en question
-    public static final int FLAT_SVG_ICON_SIZE = 25;
-    public static final int K_MENU_LEFT_WIDTH = 55;
-
-    // Icones de menus
-    public static final FlatSVGIcon clientIcon = new FlatSVGIcon("svgs/client.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon reservationIcon = new FlatSVGIcon("svgs/reservation.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon chambreIcon = new FlatSVGIcon("svgs/chambre.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon employeeIcon = new FlatSVGIcon("svgs/employe.svg",FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon serviceIcon = new FlatSVGIcon("svgs/service.svg",FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon factureIcon = new FlatSVGIcon("svgs/facture.svg",FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon statistiqueIcon = new FlatSVGIcon("svgs/stats.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon settingsIcon = new FlatSVGIcon("svgs/settings.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-    public static final FlatSVGIcon logoutIcon = new FlatSVGIcon("svgs/logout.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
-
-    // Instance de connexion a la base de donnée
+    // Instance de connexion à la base de données
     protected Connection connection;
-
-    // Autres icones
-    public static final FlatSVGIcon sendIcon = new FlatSVGIcon("svgs/send.svg", FLAT_SVG_ICON_SIZE, FLAT_SVG_ICON_SIZE);
 
     public Kpanel() {
         connectToDatabase();
     }
 
     public void connectToDatabase() {
-        Properties properties = new Properties();
-        try(InputStream inputStream = getClass().getResourceAsStream("/database/databaseORACLE.properties")) {
-            properties.load(inputStream);
-        }catch (Exception e){
-            e.printStackTrace(System.err);
-        }
+        try {
+            // Chargement de la classe JDBC d'Oracle
+            Class.forName("oracle.jdbc.OracleDriver");
 
-        try{
-            System.out.println(properties.getProperty("jdbc.driver.class"));
-            Class.forName(properties.getProperty("jdbc.driver.class"));
+            // Connexion à la base de données
             connection = DriverManager.getConnection(
-                    properties.getProperty("jdbc.url"),
-                    properties.getProperty("jdbc.login"),
-                    properties.getProperty("jdbc.password")
+                    "jdbc:oracle:thin:@localhost:1521:orcl", // URL de connexion
+                    "c##koulibaly", // Nom d'utilisateur
+                    "1234567890"  // Mot de passe
             );
+
+            System.out.println("Connexion réussie à la base de données.");
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
     }
 
+    // Méthode pour insérer un produit dans la base de données
+    public void insertProduct(String name, double price, int quantity, String state, String category, String corbeille) {
+        String sql = "INSERT INTO PRODUIT_G1J (nom_p, prix_p, quantite_p, etat_p, category_p, corbeille_p) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            pstmt.setDouble(2, price);
+            pstmt.setInt(3, quantity);
+            pstmt.setString(4, state);
+            pstmt.setString(5, category);
+            pstmt.setString(6, corbeille);
+            pstmt.executeUpdate();
+            System.out.println("Produit inséré avec succès : " + name);
+        } catch (SQLException e) {
+            e.printStackTrace(System.err);
+        }
+    }
+
+    // Méthode pour mettre à jour un produit dans la base de données
+    public void updateProduct(String name, double price, int quantity, String state, String category, String corbeille) {
+        String sql = "UPDATE PRODUIT_G1J SET prix_p = ?, quantite_p = ?, etat_p = ?, category_p = ?, corbeille_p = ? WHERE nom_p = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setDouble(1, price);
+            pstmt.setInt(2, quantity);
+            pstmt.setString(3, state);
+            pstmt.setString(4, category);
+            pstmt.setString(5, corbeille);
+            pstmt.setString(6, name);
+            pstmt.executeUpdate();
+            System.out.println("Produit mis à jour avec succès : " + name);
+        } catch (SQLException e) {
+            e.printStackTrace(System.err);
+        }
+    }
+
+    // Méthode pour supprimer un produit de la base de données
+    public void deleteProduct(String name) {
+        String sql = "DELETE FROM PRODUIT_G1J WHERE nom_p = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            pstmt.executeUpdate();
+            System.out.println("Produit supprimé avec succès : " + name);
+        } catch (SQLException e) {
+            e.printStackTrace(System.err);
+        }
+    }
 }

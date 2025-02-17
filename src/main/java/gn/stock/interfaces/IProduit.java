@@ -9,3 +9,5 @@ public interface IProduit {
 
     void viewProduit();
 }
+
+
