@@ -23,7 +23,7 @@ public class Kpanel extends JPanel {
 
             // Connexion à la base de données
             connection = DriverManager.getConnection(
-                    "jdbc:oracle:thin:@localhost:1521:FREE", // URL de connexion
+                    "jdbc:oracle:thin:@192.168.1.191:1521:FREE", // URL de connexion
                     "c##Hasna", // Nom d'utilisateur
                     "664116362292"  // Mot de passe
             );
