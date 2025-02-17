@@ -21,6 +21,7 @@ import gn.stock.panels.Dashboard;
 import gn.stock.panels.FournisseurPanel;
 import gn.stock.panels.ProduitPanel;
 
+
 class MainInterface extends JFrame {
     private JPanel sidePanel;
     private JPanel contentPanel;
@@ -41,6 +42,8 @@ class MainInterface extends JFrame {
         addButton("GESTION_STOCK");
         addButton("PRODUITS");
         addButton("FOURNISSEURS");
+        addButton("TRANSACTION");
+
         
         addButton("Deconnexion");
 
@@ -87,6 +90,7 @@ class MainInterface extends JFrame {
         } else if (text.equals("GESTION_STOCK")) {
             contentPanel.add(new Dashboard(), BorderLayout.CENTER);
         }
+
 
         contentPanel.revalidate();
         contentPanel.repaint();
