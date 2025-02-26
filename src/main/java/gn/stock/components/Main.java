@@ -112,8 +112,7 @@ class SideBar extends JPanel {
         private final Icon fournisseurIcon = new ImageIcon("icons/supplier.png");
 
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
-                                                      boolean leaf, int row, boolean hasFocus) {
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
@@ -156,7 +155,7 @@ class SideBar extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Gestion de Stock");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(800, 600);
 
         SideBar sideBar = new SideBar();

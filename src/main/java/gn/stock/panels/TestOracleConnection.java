@@ -6,11 +6,14 @@ import java.sql.SQLException;
 
 public class TestOracleConnection {
 
-    public static void main(String[] args) {
-        String url = "jdbc:oracle:thin:@localhost:1521:orcl";
-        String username = "c##koulibaly";  // Remplacez par votre nom d'utilisateur
-        String password = "1234567890";  // Remplacez par votre mot de passe
-
+    public static void main(String[] args) throws ClassNotFoundException {
+        Class.forName("oracle.jdbc.driver.OracleDriver");
+        System.out.println("Driver loaded");
+        String url = "jdbc:oracle:thin:@" +
+                "/FREEPDB1";
+        String username = "Hasna";  // Remplacez par votre nom d'utilisateur
+        String password = "664116362292";  // Remplacez par votre mot de passe
+        System.out.println("Connecting to database...");
         try (Connection conn = DriverManager.getConnection(url, username, password)) {
             if (conn != null) {
                 System.out.println("Connexion réussie à la base de données Oracle !");

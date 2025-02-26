@@ -19,11 +19,11 @@ public class Kpanel extends JPanel {
     public void connectToDatabase() {
         try {
             // Chargement de la classe JDBC d'Oracle
-            Class.forName("oracle.jdbc.OracleDriver");
+            Class.forName("oracle.jdbc.driver.OracleDriver");
 
             // Connexion à la base de données
             connection = DriverManager.getConnection(
-                    "jdbc:oracle:thin:@192.168.1.191:1521:FREE", // URL de connexion
+                    "jdbc:oracle:thin:@192.168.1.191:1521:FREEPDB1", // URL de connexion
                     "c##Hasna", // Nom d'utilisateur
                     "664116362292"  // Mot de passe
             );
