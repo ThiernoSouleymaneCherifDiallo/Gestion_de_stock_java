@@ -201,7 +201,7 @@ public class ProduitPanel extends Kpanel implements IProduit {
 
     private void fillFieldsWithSelectedProduct() {
         productNameField.setText((String) tableModel.getValueAt(selectedRow, 0));
-        productPriceField.setText((String) tableModel.getValueAt(selectedRow, 1));
+        productPriceField.setText((String) tableModel.getValueAt(selectedRow, 1).toString());
         productQuantityField.setText((String) tableModel.getValueAt(selectedRow, 2).toString());
         productStateField.setText((String) tableModel.getValueAt(selectedRow, 3));
         productCategoryField.setText((String) tableModel.getValueAt(selectedRow, 4));

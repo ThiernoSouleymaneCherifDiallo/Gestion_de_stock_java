@@ -20,6 +20,7 @@ import javax.swing.SwingUtilities;
 import gn.stock.panels.Dashboard;
 import gn.stock.panels.FournisseurPanel;
 import gn.stock.panels.ProduitPanel;
+import gn.stock.panels.UtilisateurPanel;
 
 
 class MainInterface extends JFrame {
@@ -43,7 +44,7 @@ class MainInterface extends JFrame {
         addButton("PRODUITS");
         addButton("FOURNISSEURS");
         addButton("TRANSACTION");
-
+        addButton("UTILISATEURS");
         
         addButton("Deconnexion");
 
@@ -89,6 +90,8 @@ class MainInterface extends JFrame {
             contentPanel.add(new FournisseurPanel(), BorderLayout.CENTER);
         } else if (text.equals("GESTION_STOCK")) {
             contentPanel.add(new Dashboard(), BorderLayout.CENTER);
+        }else if (text.equals("UTILISATEURS")) {
+            contentPanel.add(new UtilisateurPanel(), BorderLayout.CENTER);
         }
 
 
@@ -100,7 +103,7 @@ class MainInterface extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new MainInterface();
+                new LoginPanel();
             }
         });
     }
