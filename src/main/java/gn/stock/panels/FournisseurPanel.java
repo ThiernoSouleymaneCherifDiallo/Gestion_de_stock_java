@@ -8,17 +8,17 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
+import java.util.Vector;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 import gn.stock.base.Kpanel;
@@ -30,6 +30,8 @@ public class FournisseurPanel extends Kpanel implements IProduit {
     private JTextField telField;
     private JTextField adresseField;
     private JTextField emailField;
+    private JComboBox<String> txtProduit;
+    private JTextField txtSearchName;
     private JButton addButton;
     private JButton updateButton;
     private JButton deleteButton;
@@ -42,9 +44,10 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         setBackground(new Color(245, 245, 245)); // Couleur de fond
 
         // Configuration de la table
-        String[] columnNames = {"Nom et Prénom", "Téléphone", "Adresse", "Email"};
+        String[] columnNames = { "Produit", "Nom et Prénom", "Téléphone", "Adresse", "Email"};
         tableModel = new DefaultTableModel(columnNames, 0);
         fournisseurTable = new JTable(tableModel);
+        loadFournisseurs("");
         JScrollPane scrollPane = new JScrollPane(fournisseurTable);
         scrollPane.setPreferredSize(new Dimension(400, 150));
 
@@ -92,7 +95,21 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         inputPanel.add(emailField, gbc);
 
         gbc.gridx = 0; // Colonne 0
-        gbc.gridy = 5; // Ligne 5
+        gbc.gridy = 5; // Ligne 4
+        inputPanel.add(new JLabel("Produit :"), gbc);
+        gbc.gridx = 1; // Colonne 1
+        txtProduit = new JComboBox<>(getNOMSProduit());
+        inputPanel.add(txtProduit, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        inputPanel.add(new JLabel("Rechercher par le nom ?"), gbc);
+        gbc.gridx = 1;
+        txtSearchName = new JTextField();
+        inputPanel.add(txtSearchName, gbc);
+
+        gbc.gridx = 0; // Colonne 0
+        gbc.gridy = 7; // Ligne 5
         gbc.gridwidth = 2; // Le bouton occupe deux colonnes
 
         // Ajout de l'icône au bouton Ajouter
@@ -105,22 +122,22 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         addButton.addActionListener(e -> createProduit());
 
         // Nouveau bouton pour mettre à jour
-        ImageIcon updateIcon = new ImageIcon(getClass().getResource("/update_icon.png"));
+        ImageIcon updateIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/update_icon.png")));
         Image scaledUpdateIcon = updateIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
         updateButton = new JButton("Mettre à jour", new ImageIcon(scaledUpdateIcon));
         updateButton.setBackground(new Color(46, 204, 113)); // Couleur de fond du bouton Mettre à jour
         updateButton.setForeground(Color.WHITE); // Couleur du texte
-        gbc.gridy = 6; // Ligne 6
+        gbc.gridy = 8; // Ligne 6
         inputPanel.add(updateButton, gbc);
         updateButton.addActionListener(e -> updateProduit());
 
         // Nouveau bouton pour supprimer
-        ImageIcon deleteIcon = new ImageIcon(getClass().getResource("/delete_icon.png"));
+        ImageIcon deleteIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/delete_icon.png")));
         Image scaledDeleteIcon = deleteIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
         deleteButton = new JButton("Supprimer", new ImageIcon(scaledDeleteIcon));
         deleteButton.setBackground(new Color(231, 76, 60)); // Couleur de fond rouge pour le bouton Supprimer
         deleteButton.setForeground(Color.WHITE); // Couleur du texte
-        gbc.gridy = 7; // Ligne 7
+        gbc.gridy = 9; // Ligne 7
         inputPanel.add(deleteButton, gbc);
         deleteButton.addActionListener(e -> deleteProduit());
 
@@ -141,13 +158,51 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         // Ajustement de la taille du JPanel pour occuper 100% de la largeur
         setPreferredSize(new Dimension(800, 600)); // Ajustez la largeur selon vos besoins
         setMinimumSize(new Dimension(800, 600)); // Définir une taille minimale
+        listeners();
+    }
+
+    private void loadFournisseurs(String NOM_PRENOM_F) {
+        tableModel.setRowCount(0);
+        String sql = "select * from fournisseur_g1j WHERE NOM_PRENOM_F LIKE ? ORDER BY id_p DESC";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+            preparedStatement.setString(1, "%" + NOM_PRENOM_F + "%");
+            try(ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next()) {
+                    tableModel.addRow(new Object[]{
+                            resultSet.getInt("ID_P") + "",
+                            resultSet.getString("NOM_PRENOM_F"),
+                            resultSet.getString("TEL_F"),
+                            resultSet.getString("ADRESSE_F"),
+                            resultSet.getString("EMAIL_F")
+                    });
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Vector<String> getNOMSProduit() {
+        Vector<String> idsProduits = new Vector<>();
+        String requete = "SELECT NOM_P from produit_g1j";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(requete)){
+            try(ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next()){
+                    System.out.println("prepared");
+                    idsProduits.add(resultSet.getString("NOM_P"));
+                }
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return idsProduits;
     }
 
     private void fillFieldsWithSelectedFournisseur() {
-        nomPrenomField.setText((String) tableModel.getValueAt(selectedRow, 0));
-        telField.setText((String) tableModel.getValueAt(selectedRow, 1));
-        adresseField.setText((String) tableModel.getValueAt(selectedRow, 2));
-        emailField.setText((String) tableModel.getValueAt(selectedRow, 3));
+        nomPrenomField.setText((String) tableModel.getValueAt(selectedRow, 1));
+        telField.setText((String) tableModel.getValueAt(selectedRow, 2));
+        adresseField.setText((String) tableModel.getValueAt(selectedRow, 3));
+        emailField.setText((String) tableModel.getValueAt(selectedRow, 4));
     }
 
     @Override
@@ -156,18 +211,15 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         String tel = telField.getText().trim();
         String adresse = adresseField.getText().trim();
         String email = emailField.getText().trim();
+        int idProduct = getIdFromProductName((String) txtProduit.getSelectedItem());
 
         // Vérification que les champs ne sont pas vides
         if (nomPrenom.isEmpty() || tel.isEmpty() || adresse.isEmpty() || email.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        // Ajout des informations à la table
-        tableModel.addRow(new Object[]{nomPrenom, tel, adresse, email});
-
         // Insertion dans la base de données
-        insertFournisseur(nomPrenom, tel, adresse, email);
+        insertFournisseur(nomPrenom, tel, adresse, email, idProduct);
 
         // Vider les champs après l'ajout
         nomPrenomField.setText("");
@@ -176,18 +228,34 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         emailField.setText("");
     }
 
-    private void insertFournisseur(String nomPrenom, String tel, String adresse, String email) {
-        String sql = "INSERT INTO FOURNISSEUR_G1J(ID_P,NOM_PRENOM_F,TEL_F , ADRESSE_F, EMAIL_F) VALUES (?,?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, Integer.parseInt("1"));
+    private int getIdFromProductName(String selectedItem) {
+        String requete = "SELECT ID_P from produit_g1j WHERE NOM_P = ?";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(requete)){
+            preparedStatement.setString(1, selectedItem);
+            try(ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next()){
+                    return resultSet.getInt("ID_P");
+                }
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
+    private void insertFournisseur(String nomPrenom, String tel, String adresse, String email, int product_id) {
+        String sql = "INSERT INTO FOURNISSEUR_G1J(ID_P, NOM_PRENOM_F,TEL_F , ADRESSE_F, EMAIL_F) VALUES (?,?,?,?,?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            pstmt.setInt(1, product_id);
             pstmt.setString(2, nomPrenom);
             pstmt.setString(3, tel);
             pstmt.setString(4, adresse);
             pstmt.setString(5, email);
 
             pstmt.executeUpdate();
-            System.out.println("Fournisseur inséré avec succès : " + nomPrenom);
+            JOptionPane.showMessageDialog(this, "Fournisseur inseré avec succés", "Info", JOptionPane.INFORMATION_MESSAGE);
+            loadFournisseurs("");
         } catch (SQLException e) {
             e.printStackTrace(System.err);
         }
@@ -195,44 +263,92 @@ public class FournisseurPanel extends Kpanel implements IProduit {
 
     @Override
     public void updateProduit() {
-        if (selectedRow != -1) {
-            String nomPrenom = nomPrenomField.getText().trim();
-            String tel = telField.getText().trim();
-            String adresse = adresseField.getText().trim();
-            String email = emailField.getText().trim();
-
-            // Vérification que les champs ne sont pas vides
-            if (nomPrenom.isEmpty() || tel.isEmpty() || adresse.isEmpty() || email.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tous les champs doivent être remplis.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Mise à jour des informations dans la table
-            tableModel.setValueAt(nomPrenom, selectedRow, 0);
-            tableModel.setValueAt(tel, selectedRow, 1);
-            tableModel.setValueAt(adresse, selectedRow, 2);
-            tableModel.setValueAt(email, selectedRow, 3);
-
-            // Vider les champs après la mise à jour
-            nomPrenomField.setText("");
-            telField.setText("");
-            adresseField.setText("");
-            emailField.setText("");
+        // Logique pour supprimer le fournisseur
+        int selectedRow = fournisseurTable.getSelectedRow();
+        if (selectedRow == -1){
+            JOptionPane.showMessageDialog(this, "Selectionner une ligne pour la supprimer !", " Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        String requete = "UPDATE FOURNISSEUR_G1J SET NOM_PRENOM_F = ?, TEL_F=?, ADRESSE_F = ?, EMAIL_F = ? WHERE ID_P = ?";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(requete)){
+            preparedStatement.setString(1, nomPrenomField.getText());
+            preparedStatement.setString(2, telField.getText());
+            preparedStatement.setString(3, adresseField.getText());
+            preparedStatement.setString(4, emailField.getText());
+            preparedStatement.setInt(5, Integer.parseInt(fournisseurTable.getValueAt(selectedRow, 0).toString()));
+
+            preparedStatement.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Mise a jour reussie !");
+            loadFournisseurs("");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+
+
+
+    }
+
+    public void listeners(){
+        fournisseurTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                int selectedRow = fournisseurTable.getSelectedRow();
+                if (selectedRow != -1){
+                    return;
+                }
+
+                nomPrenomField.setText((String) tableModel.getValueAt(selectedRow, 1));
+                telField.setText((String) tableModel.getValueAt(selectedRow, 2));
+                adresseField.setText((String) tableModel.getValueAt(selectedRow, 3));
+                emailField.setText((String) tableModel.getValueAt(selectedRow, 4));
+            }
+        });
+
+        txtSearchName.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                System.out.println(txtSearchName.getText());
+                loadFournisseurs(txtSearchName.getText());
+            }
+        });
     }
 
     @Override
     public void deleteProduit() {
         // Logique pour supprimer le fournisseur
-        if (selectedRow != -1) {
-            tableModel.removeRow(selectedRow);
-            selectedRow = -1; // Réinitialiser la sélection
-            // Réinitialiser les champs de texte
-            nomPrenomField.setText("");
-            telField.setText("");
-            adresseField.setText("");
-            emailField.setText("");
+        int selectedRow = fournisseurTable.getSelectedRow();
+        String delEmail = fournisseurTable.getValueAt(selectedRow, 4).toString();
+        if (selectedRow == -1){
+            JOptionPane.showMessageDialog(this, "Selectionner une ligne pour la supprimer !", " Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        int choix = JOptionPane.showConfirmDialog(this, "Etes vous sur de supprimer ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (choix == JOptionPane.YES_OPTION){
+            String requete = "DELETE FROM FOURNISSEUR_G1J WHERE EMAIL_F = ?";
+            try(PreparedStatement preparedStatement = connection.prepareStatement(requete)){
+                preparedStatement.setString(1, delEmail);
+
+                preparedStatement.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Suppression reussie avec succés", "Info", JOptionPane.INFORMATION_MESSAGE);
+                tableModel.removeRow(selectedRow);
+                loadFournisseurs("");
+            } catch (RuntimeException | SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        selectedRow = -1; // Réinitialiser la sélection
+        // Réinitialiser les champs de texte
+        nomPrenomField.setText("");
+        telField.setText("");
+        adresseField.setText("");
+        emailField.setText("");
     }
 
     @Override
