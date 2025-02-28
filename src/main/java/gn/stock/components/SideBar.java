@@ -17,10 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import gn.stock.panels.Dashboard;
-import gn.stock.panels.FournisseurPanel;
-import gn.stock.panels.ProduitPanel;
-import gn.stock.panels.UtilisateurPanel;
+import gn.stock.panels.*;
 
 
 class MainInterface extends JFrame {
@@ -92,6 +89,8 @@ class MainInterface extends JFrame {
             contentPanel.add(new Dashboard(), BorderLayout.CENTER);
         }else if (text.equals("UTILISATEURS")) {
             contentPanel.add(new UtilisateurPanel(), BorderLayout.CENTER);
+        }else if (text.equals("TRANSACTION")) {
+            contentPanel.add(new TransacPanel(new Dashboard()), BorderLayout.CENTER);
         }
 
 
@@ -103,7 +102,7 @@ class MainInterface extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new LoginPanel();
+                new MainInterface();
             }
         });
     }
