@@ -18,7 +18,15 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 import gn.stock.base.Kpanel;
@@ -41,18 +49,25 @@ public class FournisseurPanel extends Kpanel implements IProduit {
 
     public FournisseurPanel() {
         setLayout(new BorderLayout(20, 20)); // Utilisation de BorderLayout pour occuper tout l'espace
-        setBackground(new Color(245, 245, 245)); // Couleur de fond
+        setBackground(new Color(30, 30, 30)); // Couleur de fond sombre
 
         // Configuration de la table
         String[] columnNames = { "Produit", "Nom et Prénom", "Téléphone", "Adresse", "Email"};
         tableModel = new DefaultTableModel(columnNames, 0);
         fournisseurTable = new JTable(tableModel);
-        loadFournisseurs("");
+        fournisseurTable.setBackground(new Color(50, 50, 50)); // Couleur de fond du tableau
+        fournisseurTable.setForeground(Color.WHITE); // Couleur du texte du tableau
+        fournisseurTable.setGridColor(new Color(70, 70, 70)); // Couleur des lignes de grille
+
         JScrollPane scrollPane = new JScrollPane(fournisseurTable);
         scrollPane.setPreferredSize(new Dimension(400, 150));
+        scrollPane.getViewport().setBackground(new Color(50, 50, 50)); // Couleur de fond du viewport
+
+        loadFournisseurs("");
 
         // Panneau pour les champs de saisie
         JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau d'entrée
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL; // Remplissage horizontal
@@ -62,48 +77,48 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         gbc.gridy = 0; // Ligne 0
         gbc.gridwidth = 2; // Étiquette occupe deux colonnes
         JLabel titleLabel = new JLabel("Ajouter un Fournisseur");
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 24));
-        titleLabel.setForeground(new Color(0, 102, 204)); // Couleur du texte
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        titleLabel.setForeground(Color.WHITE); // Couleur du texte
         inputPanel.add(titleLabel, gbc);
 
         gbc.gridwidth = 1; // Réinitialisation à une colonne
         gbc.gridy = 1; // Ligne 1
-        inputPanel.add(new JLabel("Nom et Prénom :"), gbc);
+        inputPanel.add(createLabel("Nom et Prénom :"), gbc);
         gbc.gridx = 1; // Colonne 1
         nomPrenomField = new JTextField(20);
         inputPanel.add(nomPrenomField, gbc);
 
         gbc.gridx = 0; // Colonne 0
         gbc.gridy = 2; // Ligne 2
-        inputPanel.add(new JLabel("Téléphone :"), gbc);
+        inputPanel.add(createLabel("Téléphone :"), gbc);
         gbc.gridx = 1; // Colonne 1
         telField = new JTextField(10);
         inputPanel.add(telField, gbc);
 
         gbc.gridx = 0; // Colonne 0
         gbc.gridy = 3; // Ligne 3
-        inputPanel.add(new JLabel("Adresse :"), gbc);
+        inputPanel.add(createLabel("Adresse :"), gbc);
         gbc.gridx = 1; // Colonne 1
         adresseField = new JTextField(30);
         inputPanel.add(adresseField, gbc);
 
         gbc.gridx = 0; // Colonne 0
         gbc.gridy = 4; // Ligne 4
-        inputPanel.add(new JLabel("Email :"), gbc);
+        inputPanel.add(createLabel("Email :"), gbc);
         gbc.gridx = 1; // Colonne 1
         emailField = new JTextField(30);
         inputPanel.add(emailField, gbc);
 
         gbc.gridx = 0; // Colonne 0
         gbc.gridy = 5; // Ligne 4
-        inputPanel.add(new JLabel("Produit :"), gbc);
+        inputPanel.add(createLabel("Produit :"), gbc);
         gbc.gridx = 1; // Colonne 1
         txtProduit = new JComboBox<>(getNOMSProduit());
         inputPanel.add(txtProduit, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 6;
-        inputPanel.add(new JLabel("Rechercher par le nom ?"), gbc);
+        inputPanel.add(createLabel("Rechercher par le nom ?"), gbc);
         gbc.gridx = 1;
         txtSearchName = new JTextField();
         inputPanel.add(txtSearchName, gbc);
@@ -159,6 +174,13 @@ public class FournisseurPanel extends Kpanel implements IProduit {
         setPreferredSize(new Dimension(800, 600)); // Ajustez la largeur selon vos besoins
         setMinimumSize(new Dimension(800, 600)); // Définir une taille minimale
         listeners();
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        label.setForeground(Color.WHITE);
+        return label;
     }
 
     private void loadFournisseurs(String NOM_PRENOM_F) {

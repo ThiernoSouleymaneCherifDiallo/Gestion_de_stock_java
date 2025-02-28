@@ -1,6 +1,8 @@
 package gn.stock.components;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
@@ -8,6 +10,19 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 public class LoginPanel extends JFrame {
     private JTextField usernameField;
@@ -24,39 +39,42 @@ public class LoginPanel extends JFrame {
 
         // Panneau principal avec couleur de fond bleue
         JPanel panel = new JPanel();
-        panel.setBackground(new Color(0, 102, 204)); // Bleu
+        panel.setBackground(new Color(36, 36, 38)); // Couleur de fond sombre
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Titre
         JLabel titleLabel = new JLabel("Connexion");
         titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(titleLabel);
 
-        panel.add(Box.createVerticalStrut(10)); // Espacement
+        panel.add(Box.createVerticalStrut(20)); // Espacement
 
         // Champs de saisie avec icônes
-        usernameField = createTextField("Nom d'utilisateur", new ImageIcon("user_icon.png"));
-        passwordField = createPasswordField("Mot de passe", new ImageIcon("lock_icon.png"));
+        usernameField = createTextField("Nom d'utilisateur", new ImageIcon(getClass().getResource("/user_icon.png")));
+        passwordField = createPasswordField("Mot de passe", new ImageIcon(getClass().getResource("/welcome_image.png")));
 
         panel.add(usernameField);
         panel.add(Box.createVerticalStrut(10));
         panel.add(passwordField);
-        panel.add(Box.createVerticalStrut(15));
+        panel.add(Box.createVerticalStrut(20));
 
         // Bouton Connexion
         loginButton = new JButton("Se connecter");
         stylizeButton(loginButton);
         panel.add(loginButton);
 
+        panel.add(Box.createVerticalStrut(10));
+
         // Bouton Mot de passe oublié
         forgotPasswordButton = new JButton("Mot de passe oublié ?");
-        forgotPasswordButton.setForeground(Color.WHITE);
-        forgotPasswordButton.setBackground(new Color(0, 102, 204));
+        forgotPasswordButton.setForeground(Color.LIGHT_GRAY);
+        forgotPasswordButton.setBackground(new Color(36, 36, 38));
         forgotPasswordButton.setBorderPainted(false);
         forgotPasswordButton.setFocusPainted(false);
+        forgotPasswordButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(forgotPasswordButton);
 
         // Ajout du panneau à la fenêtre
@@ -73,8 +91,8 @@ public class LoginPanel extends JFrame {
                 // Connexion à la base de données Oracle
                 try (Connection connection = DriverManager.getConnection(
                         "jdbc:oracle:thin:@//localhost:1521/orcl", // URL de connexion Oracle
-                        "c##gestionstock", // Nom d'utilisateur Oracle
-                        "gesionstockpassword" // Mot de passe Oracle
+                        "c##koulibaly", // Nom d'utilisateur Oracle
+                        "1234567890" // Mot de passe Oracle
                 )) {
                     // Requête SQL pour vérifier les informations de connexion
                     String sql = "SELECT email, mot_de_passe FROM UTILISATEUR_G1J WHERE email = ?";
@@ -136,30 +154,31 @@ public class LoginPanel extends JFrame {
     // Méthodes utilitaires pour créer les champs de saisie et styliser les boutons
     private JTextField createTextField(String placeholder, ImageIcon icon) {
         JTextField textField = new JTextField(20);
-        textField.setPreferredSize(new Dimension(200, 15)); // Réduire la hauteur à 25 pixels
+        textField.setPreferredSize(new Dimension(200, 30)); // Ajuster la hauteur
         textField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(150, 150, 150)), // Bordure fine
                 BorderFactory.createEmptyBorder(5, 5, 5, 5))); // Marge intérieure
-        textField.setFont(new Font("Arial", Font.PLAIN, 16));
+        textField.setFont(new Font("SansSerif", Font.PLAIN, 16));
         return textField;
     }
 
     private JPasswordField createPasswordField(String placeholder, ImageIcon icon) {
         JPasswordField passwordField = new JPasswordField(20);
-        passwordField.setPreferredSize(new Dimension(200, 15)); // Réduire la hauteur à 25 pixels
+        passwordField.setPreferredSize(new Dimension(200, 30)); // Ajuster la hauteur
         passwordField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(150, 150, 150)), // Bordure fine
                 BorderFactory.createEmptyBorder(5, 5, 5, 5))); // Marge intérieure
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 16));
+        passwordField.setFont(new Font("SansSerif", Font.PLAIN, 16));
         return passwordField;
     }
 
     private void stylizeButton(JButton button) {
         button.setBackground(new Color(46, 204, 113));
         button.setForeground(Color.WHITE);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
         button.setFocusPainted(false);
         button.setBorderPainted(false);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
 
     public static void main(String[] args) {

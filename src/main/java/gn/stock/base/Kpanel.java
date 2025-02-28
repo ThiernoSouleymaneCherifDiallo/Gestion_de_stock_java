@@ -23,9 +23,9 @@ public class Kpanel extends JPanel {
 
             // Connexion à la base de données
             connection = DriverManager.getConnection(
-                    "jdbc:oracle:thin:@localhost:1521:orcl", // URL de connexion
-                    "c##gestionstock", // Nom d'utilisateur
-                    "gesionstockpassword"  // Mot de passe
+                    "jdbc:oracle:thin:@//localhost:1521/orcl", // URL de connexion Oracle
+                    "c##koulibaly", // Nom d'utilisateur Oracle
+                    "1234567890" // Mot de passe Oracle
             );
 
             System.out.println("Connexion réussie à la base de données.");

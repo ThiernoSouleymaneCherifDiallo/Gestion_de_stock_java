@@ -1,13 +1,32 @@
 package gn.stock.panels;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.Timer;
+import javax.swing.table.DefaultTableModel;
+
 import gn.stock.base.Kpanel;
 import gn.stock.interfaces.ITransaction;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.sql.*;
 
 public class TransacPanel extends Kpanel implements ITransaction {
 
@@ -18,33 +37,36 @@ public class TransacPanel extends Kpanel implements ITransaction {
     private DefaultTableModel tableModel;
     private JTable transactionTable;
     private JButton createButton, updateButton, deleteButton, addButton;
-    private Dashboard dashboard;
     private JTextField idTransactionField;
     private JCheckBox receiptCheckBox;
     private int currentTransactionId; // Variable pour stocker l'ID de la transaction en cours
     private Timer refreshTimer;
     private JTextField transactionIdField;
 
-    public TransacPanel(Dashboard dashboard) {
-        this.dashboard = dashboard;
+    public TransacPanel() {
         setLayout(new BorderLayout(20, 20)); // Utilisation de BorderLayout pour occuper tout l'espace
-        setBackground(new Color(245, 245, 245)); // Couleur de fond
+        setBackground(new Color(30, 30, 30)); // Couleur de fond sombre
 
-        // Initialisation de la case à cocher
-        receiptCheckBox = new JCheckBox("Recevoir un reçu");
+        // Initialisation de la case à cocher
+        receiptCheckBox = new JCheckBox("Recevoir un reçu");
+        receiptCheckBox.setBackground(new Color(45, 45, 45)); // Couleur de fond
+        receiptCheckBox.setForeground(Color.WHITE); // Couleur du texte
 
-        // Ajout de la case à cocher au panneau (si nécessaire)
-        add(receiptCheckBox);
-
-        // Table pour afficher les produits sélectionnés
+        // Table pour afficher les produits sélectionnés
         tableModel = new DefaultTableModel(
-                new Object[]{"ID Produit", "Nom du Produit", "Quantité du Produit", "Nom Utilisateur"}, 0);
+                new Object[]{"ID Produit", "Nom du Produit", "Quantité du Produit", "Nom Utilisateur"}, 0);
         transactionTable = new JTable(tableModel);
+        transactionTable.setBackground(new Color(50, 50, 50)); // Couleur de fond du tableau
+        transactionTable.setForeground(Color.WHITE); // Couleur du texte du tableau
+        transactionTable.setGridColor(new Color(70, 70, 70)); // Couleur des lignes de grille
+
         JScrollPane tableScrollPane = new JScrollPane(transactionTable);
         tableScrollPane.setPreferredSize(new Dimension(400, 150));
+        tableScrollPane.getViewport().setBackground(new Color(50, 50, 50)); // Couleur de fond du viewport
 
         // Panneau pour les champs de saisie
         JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau d'entrée
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL; // Remplissage horizontal
@@ -54,34 +76,34 @@ public class TransacPanel extends Kpanel implements ITransaction {
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         JLabel titleLabel = new JLabel("Ajouter une transaction");
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 24));
-        titleLabel.setForeground(new Color(0, 102, 204)); // Couleur du texte
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        titleLabel.setForeground(Color.WHITE); // Couleur du texte
         inputPanel.add(titleLabel, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridy = 1;
-        inputPanel.add(new JLabel("Type de Transaction :"), gbc);
+        inputPanel.add(createLabel("Type de Transaction :"), gbc);
         gbc.gridx = 1;
-        typeTransactionComboBox = new JComboBox<>(new String[]{"Entrée", "Sortie"});
+        typeTransactionComboBox = new JComboBox<>(new String[]{"Entrée", "Sortie"});
         inputPanel.add(typeTransactionComboBox, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        inputPanel.add(new JLabel("Produit :"), gbc);
+        inputPanel.add(createLabel("Produit :"), gbc);
         gbc.gridx = 1;
         productComboBox = new JComboBox<>();
         inputPanel.add(productComboBox, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 3;
-        inputPanel.add(new JLabel("Quantité :"), gbc);
+        inputPanel.add(createLabel("Quantité :"), gbc);
         gbc.gridx = 1;
         quantityField = new JTextField(10);
         inputPanel.add(quantityField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 4;
-        inputPanel.add(new JLabel("Utilisateur :"), gbc);
+        inputPanel.add(createLabel("Utilisateur :"), gbc);
         gbc.gridx = 1;
         userComboBox = new JComboBox<>();
         inputPanel.add(userComboBox, gbc);
@@ -94,19 +116,19 @@ public class TransacPanel extends Kpanel implements ITransaction {
         inputPanel.add(addButton, gbc);
         addButton.addActionListener(e -> addProductToTable());
 
-        // Bouton pour créer une transaction
+        // Bouton pour créer une transaction
         ImageIcon createIcon = new ImageIcon(getClass().getResource("/add.png"));
-        Image scaledCreateIcon = createIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
-        createButton = new JButton("Créer", new ImageIcon(scaledCreateIcon));
+        Image scaledCreateIcon = createIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
+        createButton = new JButton("Créer", new ImageIcon(scaledCreateIcon));
         createButton.setBackground(new Color(52, 152, 219)); // Couleur de fond bleue
         createButton.setForeground(Color.WHITE); // Couleur du texte
         gbc.gridy = 6; // Ligne 6
         inputPanel.add(createButton, gbc);
         createButton.addActionListener(e -> createTransation());
 
-        // Bouton pour mettre à jour une transaction
+        // Bouton pour mettre à jour une transaction
         ImageIcon updateIcon = new ImageIcon(getClass().getResource("/update_icon.png"));
-        Image scaledUpdateIcon = updateIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
+        Image scaledUpdateIcon = updateIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
         updateButton = new JButton("Modifier", new ImageIcon(scaledUpdateIcon));
         updateButton.setBackground(new Color(46, 204, 113)); // Couleur de fond verte
         updateButton.setForeground(Color.WHITE); // Couleur du texte
@@ -116,7 +138,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
 
         // Bouton pour supprimer une transaction
         ImageIcon deleteIcon = new ImageIcon(getClass().getResource("/delete_icon.png"));
-        Image scaledDeleteIcon = deleteIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
+        Image scaledDeleteIcon = deleteIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH); // Redimensionner l'icône
         deleteButton = new JButton("Supprimer", new ImageIcon(scaledDeleteIcon));
         deleteButton.setBackground(new Color(231, 76, 60)); // Couleur de fond rouge
         deleteButton.setForeground(Color.WHITE); // Couleur du texte
@@ -124,15 +146,22 @@ public class TransacPanel extends Kpanel implements ITransaction {
         inputPanel.add(deleteButton, gbc);
         deleteButton.addActionListener(e -> deleteTransaction());
 
-        // Ajout du panneau d'entrée à l'interface
-        add(inputPanel, BorderLayout.NORTH); // Ajout du panneau d'entrée en haut
+        // Ajout du panneau d'entrée à l'interface
+        add(inputPanel, BorderLayout.NORTH); // Ajout du panneau d'entrée en haut
 
-        // Ajout de la table à l'interface
+        // Ajout de la table à l'interface
         add(tableScrollPane, BorderLayout.CENTER); // Ajout du JScrollPane contenant la table
 
-        // Charger les données depuis la base de données
+        // Charger les données depuis la base de données
         loadProductsFromDatabase();
         loadUsersFromDatabase();
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        label.setForeground(Color.WHITE);
+        return label;
     }
 
     /**
@@ -420,6 +449,6 @@ public class TransacPanel extends Kpanel implements ITransaction {
 
 
     public static void main(String[] args) {
-        new TransacPanel(new Dashboard());
+        new TransacPanel();
     }
 }

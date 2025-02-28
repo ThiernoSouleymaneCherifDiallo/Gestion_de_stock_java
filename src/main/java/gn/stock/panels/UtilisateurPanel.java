@@ -1,21 +1,41 @@
 package gn.stock.panels;
 
-import gn.stock.base.Kpanel;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.RowFilter;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+
+import gn.stock.base.Kpanel;
+
 public class UtilisateurPanel extends Kpanel {
     private JTextField nomField, prenomField, telField, adresseField, emailField, searchField;
-    private  JComboBox roleField;
+    private JComboBox<String> roleField;
     private JPasswordField passwordField, confirmPasswordField;
     private JTable userTable;
     private DefaultTableModel tableModel;
@@ -120,81 +140,78 @@ public class UtilisateurPanel extends Kpanel {
 
     public UtilisateurPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(240, 240, 240));
+        setBackground(new Color(30, 30, 30)); // Couleur de fond sombre
 
         JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau d'entrée
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Nom:"), gbc);
+        panel.add(createLabel("Nom:"), gbc);
         nomField = new JTextField(15);
         gbc.gridx = 1;
         panel.add(nomField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("Prénom:"), gbc);
+        panel.add(createLabel("Prénom:"), gbc);
         prenomField = new JTextField(15);
         gbc.gridx = 1;
         panel.add(prenomField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
-        panel.add(new JLabel("Téléphone:"), gbc);
+        panel.add(createLabel("Téléphone:"), gbc);
         telField = new JTextField(15);
         gbc.gridx = 1;
         panel.add(telField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 3;
-        panel.add(new JLabel("Adresse:"), gbc);
+        panel.add(createLabel("Adresse:"), gbc);
         adresseField = new JTextField(15);
         gbc.gridx = 1;
         panel.add(adresseField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 4;
-        panel.add(new JLabel("Email:"), gbc);
+        panel.add(createLabel("Email:"), gbc);
         emailField = new JTextField(15);
         gbc.gridx = 1;
         panel.add(emailField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 5;
-        panel.add(new JLabel("Rôle:"), gbc);
+        panel.add(createLabel("Rôle:"), gbc);
         String option[] = {"admin", "employer"};
-        roleField = new JComboBox<>(option); // Modification ici
+        roleField = new JComboBox<>(option);
         gbc.gridx = 1;
         panel.add(roleField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 6;
-        panel.add(new JLabel("Mot de passe:"), gbc);
+        panel.add(createLabel("Mot de passe:"), gbc);
         passwordField = new JPasswordField(15);
         gbc.gridx = 1;
         panel.add(passwordField, gbc);
 
         gbc.gridx = 0; gbc.gridy = 7;
-        panel.add(new JLabel("Confirmer Mot de passe:"), gbc);
+        panel.add(createLabel("Confirmer Mot de passe:"), gbc);
         confirmPasswordField = new JPasswordField(15);
         gbc.gridx = 1;
         panel.add(confirmPasswordField, gbc);
 
         JButton addButton = new JButton("Ajouter");
-        addButton.setBackground(new Color(46, 204, 113));
+        addButton.setBackground(new Color(52, 152, 219));
         addButton.setForeground(Color.WHITE);
-        addButton.setHorizontalTextPosition(SwingConstants.RIGHT);
 
         JButton updateButton = new JButton("Modifier");
-        updateButton.setBackground(new Color(52, 152, 219));
+        updateButton.setBackground(new Color(46, 204, 113));
         updateButton.setForeground(Color.WHITE);
-        updateButton.setHorizontalTextPosition(SwingConstants.RIGHT);
 
         JButton deleteButton = new JButton("Supprimer");
         deleteButton.setBackground(new Color(231, 76, 60));
         deleteButton.setForeground(Color.WHITE);
-        deleteButton.setHorizontalTextPosition(SwingConstants.RIGHT);
 
         JButton resetPasswordButton = new JButton("Réinitialiser MDP");
         resetPasswordButton.setBackground(new Color(155, 89, 182));
         resetPasswordButton.setForeground(Color.WHITE);
-        resetPasswordButton.setHorizontalTextPosition(SwingConstants.RIGHT);
 
         gbc.gridx = 0; gbc.gridy = 8;
         panel.add(addButton, gbc);
@@ -208,11 +225,17 @@ public class UtilisateurPanel extends Kpanel {
         String[] columnNames = {"ID", "Nom", "Prénom", "Téléphone", "Adresse", "Email", "Rôle", "Mot de passe"};
         tableModel = new DefaultTableModel(columnNames, 0);
         userTable = new JTable(tableModel);
+        userTable.setBackground(new Color(50, 50, 50)); // Couleur de fond du tableau
+        userTable.setForeground(Color.WHITE); // Couleur du texte du tableau
+        userTable.setGridColor(new Color(70, 70, 70)); // Couleur des lignes de grille
+
         JScrollPane scrollPane = new JScrollPane(userTable);
+        scrollPane.getViewport().setBackground(new Color(50, 50, 50)); // Couleur de fond du viewport
 
         searchField = new JTextField(20);
         JPanel searchPanel = new JPanel();
-        searchPanel.add(new JLabel("Rechercher:"));
+        searchPanel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau de recherche
+        searchPanel.add(createLabel("Rechercher:"));
         searchPanel.add(searchField);
 
         add(panel, BorderLayout.WEST);
@@ -225,6 +248,13 @@ public class UtilisateurPanel extends Kpanel {
         resetPasswordButton.addActionListener(e -> resetPassword());
         getUsers(tableModel, "");
         listeners();
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        label.setForeground(Color.WHITE);
+        return label;
     }
 
     private void addUser(ActionEvent event) {
