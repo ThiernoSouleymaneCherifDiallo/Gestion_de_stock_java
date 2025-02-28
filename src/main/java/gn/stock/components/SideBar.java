@@ -7,15 +7,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import gn.stock.panels.*;
 
@@ -37,13 +31,18 @@ class MainInterface extends JFrame {
         sidePanel.setPreferredSize(new Dimension(200, getHeight()));
 
         // Ajout des boutons au panneau latéral
-        addButton("GESTION_STOCK");
-        addButton("PRODUITS");
-        addButton("FOURNISSEURS");
-        addButton("TRANSACTION");
-        addButton("UTILISATEURS");
-        
-        addButton("Deconnexion");
+        if (getNbUsers()){
+            addButton("GESTION_STOCK");
+            addButton("PRODUITS");
+            addButton("FOURNISSEURS");
+            addButton("TRANSACTION");
+            addButton("UTILISATEURS");
+
+            addButton("Deconnexion");
+        }else {
+            addButton("UTILISATEURS");
+        }
+
 
         // Création du panneau de contenu
         contentPanel = new JPanel();
@@ -57,6 +56,8 @@ class MainInterface extends JFrame {
 
         setVisible(true);
     }
+
+
 
     private void addButton(String text) {
         JButton button = new JButton(text);
@@ -98,12 +99,42 @@ class MainInterface extends JFrame {
         contentPanel.repaint();
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new MainInterface();
+    public static boolean getNbUsers(){
+
+        try (Connection connection = DriverManager.getConnection(
+                "jdbc:oracle:thin:@//localhost:1521/orcl", // URL de connexion Oracle
+                "c##gestionstock", // Nom d'utilisateur Oracle
+                "gesionstockpassword" // Mot de passe Oracle
+        )) {
+            // Requête SQL pour vérifier les informations de connexion
+            String sql = "SELECT * FROM UTILISATEUR_G1J ";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                if (pstmt.executeUpdate() >0){
+                    return true;
+                }
             }
-        });
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void main(String[] args) {
+
+        if (getNbUsers()){
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    new LoginPanel();
+                }
+            });
+        }else {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    new MainInterface();
+                }
+            });
+        }
     }
 }
