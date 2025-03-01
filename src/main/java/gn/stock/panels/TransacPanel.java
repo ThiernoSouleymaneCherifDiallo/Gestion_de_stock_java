@@ -10,6 +10,8 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +29,17 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gn.stock.base.Kpanel;
 import gn.stock.interfaces.ITransaction;
@@ -47,6 +60,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
     private JTextField transactionIdField;
     private JButton afficherTransactionsButton;
     private boolean showingTransactions = false; // Variable pour suivre l'état actuel
+    private JPanel buttonPanel; // Ajout de cette ligne
 
     public TransacPanel() {
         setLayout(new BorderLayout(20, 20)); // Utilisation de BorderLayout pour occuper tout l'espace
@@ -119,8 +133,8 @@ public class TransacPanel extends Kpanel implements ITransaction {
         gbc.gridy = 5;
         inputPanel.add(receiptCheckBox, gbc);
 
-        // Panneau pour les boutons
-        JPanel buttonPanel = new JPanel(new GridBagLayout());
+        // Initialisation du panneau pour les boutons
+        buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setBackground(new Color(45, 45, 45));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -150,7 +164,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
         updateButton.setBackground(new Color(46, 204, 113)); // Couleur de fond verte
         updateButton.setForeground(Color.WHITE); // Couleur du texte
         gbc.gridx = 2;
-        buttonPanel.add(updateButton, gbc);
+       // buttonPanel.add(updateButton, gbc);
         updateButton.addActionListener(e -> updateTransaction());
 
         // Bouton pour supprimer une transaction
@@ -160,7 +174,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
         deleteButton.setBackground(new Color(231, 76, 60)); // Couleur de fond rouge
         deleteButton.setForeground(Color.WHITE); // Couleur du texte
         gbc.gridx = 3;
-        buttonPanel.add(deleteButton, gbc);
+        //buttonPanel.add(deleteButton, gbc);
         deleteButton.addActionListener(e -> deleteTransaction());
 
         // Initialisation du bouton "Afficher les transactions"
@@ -186,6 +200,9 @@ public class TransacPanel extends Kpanel implements ITransaction {
                 showingTransactions = !showingTransactions; // Inverser l'état
             }
         });
+
+        // Ajout du bouton pour générer le reçu
+        addGenerateReceiptButton();
 
         // Ajout du panneau d'entrée et des boutons à l'interface
         add(inputPanel, BorderLayout.NORTH); // Ajout du panneau d'entrée en haut
@@ -324,7 +341,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
                 stmtTransaction.setInt(1, idUtilisateur);
                 stmtTransaction.setDouble(2, 0.0);
                 stmtTransaction.setString(3, typeTransaction);
-                stmtTransaction.setBoolean(4, recus);
+                stmtTransaction.setString(4, "");
 
                 stmtTransaction.executeUpdate();
 
@@ -551,7 +568,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
                 int quantite = rs.getInt("QUANTITE");
                 double montant = rs.getDouble("MONTANT_T");
                 String type = rs.getString("TYPE_T");
-                boolean recus = rs.getBoolean("RECUS");
+        String recus = rs.getString("RECUS");
 
                 // Ajoutez les données récupérées au modèle de tableau
                 tableModel.addRow(new Object[]{idTransaction, idUtilisateur, nomProduit, quantite, montant, type, recus});
@@ -560,6 +577,153 @@ public class TransacPanel extends Kpanel implements ITransaction {
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Erreur lors de la récupération des transactions !");
+        }
+    }
+
+    private void addGenerateReceiptButton() {
+        JButton generateReceiptButton = new JButton("Générer Reçu");
+        generateReceiptButton.setBackground(new Color(52, 152, 219));
+        generateReceiptButton.setForeground(Color.WHITE);
+        generateReceiptButton.addActionListener(e -> generateExcelReceipt());
+        
+        // Initialiser un nouveau GridBagConstraints pour le bouton
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 5; // Assurez-vous que cette position ne chevauche pas d'autres composants
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // Ajoutez le bouton à votre panneau de boutons
+        buttonPanel.add(generateReceiptButton, gbc);
+    }
+
+    private void generateExcelReceipt() {
+        int selectedRow = transactionTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une transaction pour générer un reçu.");
+            return;
+        }
+
+        int transactionId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        String receiptFilePath = "recu_transaction_" + transactionId + ".xlsx";
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Reçu de Transaction");
+
+        // Ajouter un titre au-dessus du tableau
+        Row titleRow = sheet.createRow(0);
+        Cell titleCell = titleRow.createCell(0);
+        titleCell.setCellValue("Reçu de Transaction");
+
+        // Appliquer un style au titre
+        CellStyle titleStyle = workbook.createCellStyle();
+        org.apache.poi.ss.usermodel.Font titleFont = workbook.createFont();
+        titleFont.setBold(true);
+        titleFont.setFontHeightInPoints((short) 14);
+        titleFont.setFontName("Arial");
+        titleStyle.setFont(titleFont);
+        titleStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        // Fusionner les cellules pour centrer le titre
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 5));
+        titleCell.setCellStyle(titleStyle);
+
+        // Créer un style pour l'en-tête
+        CellStyle headerStyle = workbook.createCellStyle();
+        org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 12);
+        headerFont.setFontName("Arial");
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        // Créer l'en-tête sous le titre
+        Row headerRow = sheet.createRow(1);
+        String[] columns = {"ID Transaction", "Email Utilisateur", "Produit", "Quantité", "Montant Total", "Type de Transaction"};
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columns[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Récupérer toutes les lignes de transaction pour l'ID de transaction sélectionné
+        String query = "SELECT T.ID_T, U.EMAIL, P.NOM_P, LT.QUANTITE, (LT.QUANTITE * P.PRIX_P) AS MONTANT_TOTAL, T.TYPE_T " +
+                       "FROM TRANSACTION_G1J T " +
+                       "JOIN LIGNETRANSACTION LT ON T.ID_T = LT.ID_T " +
+                       "JOIN PRODUIT_G1J P ON LT.ID_P = P.ID_P " +
+                       "JOIN UTILISATEUR_G1J U ON T.ID_UTILISATEUR = U.ID_UTILISATEUR " +
+                       "WHERE T.ID_T = ?";
+
+        double totalAmount = 0.0;
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, transactionId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                int rowNum = 2;
+                while (rs.next()) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(rs.getInt("ID_T"));
+                    row.createCell(1).setCellValue(rs.getString("EMAIL"));
+                    row.createCell(2).setCellValue(rs.getString("NOM_P"));
+                    row.createCell(3).setCellValue(rs.getInt("QUANTITE"));
+                    double montantTotal = rs.getDouble("MONTANT_TOTAL");
+                    row.createCell(4).setCellValue(montantTotal);
+                    row.createCell(5).setCellValue(rs.getString("TYPE_T"));
+
+                    totalAmount += montantTotal;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors de la récupération des lignes de transaction.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Ajouter une ligne pour la somme des montants
+        Row totalRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Cell totalLabelCell = totalRow.createCell(3);
+        totalLabelCell.setCellValue("Total:");
+        Cell totalAmountCell = totalRow.createCell(4);
+        totalAmountCell.setCellValue(totalAmount);
+
+        // Appliquer un style au total
+        CellStyle totalStyle = workbook.createCellStyle();
+        org.apache.poi.ss.usermodel.Font totalFont = workbook.createFont();
+        totalFont.setBold(true);
+        totalStyle.setFont(totalFont);
+        totalLabelCell.setCellStyle(totalStyle);
+        totalAmountCell.setCellStyle(totalStyle);
+
+        // Ajuster la taille des colonnes
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Enregistrer le fichier Excel
+        try (FileOutputStream fileOut = new FileOutputStream(receiptFilePath)) {
+            workbook.write(fileOut);
+            JOptionPane.showMessageDialog(this, "Reçu généré avec succès !");
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors de la génération du reçu.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Mettre à jour le champ RECUS avec le chemin du fichier
+        String updateQuery = "UPDATE TRANSACTION_G1J SET RECUS = ? WHERE ID_T = ?";
+        try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+            updateStmt.setString(1, receiptFilePath);
+            updateStmt.setInt(2, transactionId);
+            updateStmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour du champ RECUS.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 

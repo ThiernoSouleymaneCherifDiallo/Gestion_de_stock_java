@@ -33,19 +33,19 @@ class MainInterface extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Bloquer le redimensionnement de la fenêtre
+        // Bloquer le redimensionnement de la fenêtre
         // setResizable(false);
 
-        // Centrer la fenêtre à l'écran
+        // Centrer la fenêtre à l'écran
         setLocationRelativeTo(null);
 
-        // Création du panneau latéral
+        // Création du panneau latéral
         sidePanel = new JPanel();
         sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.Y_AXIS));
         sidePanel.setBackground(new Color(36, 36, 38));
         sidePanel.setPreferredSize(new Dimension(200, getHeight()));
 
-        // Ajout des boutons au panneau latéral avec icônes
+        // Ajout des boutons au panneau latéral avec icônes
         addButton("GESTION_STOCK", "/stock_icon.png");
         addButton("PRODUITS", "/product_icon.png");
         addButton("FOURNISSEURS", "/supplier_icon.png");
@@ -53,7 +53,7 @@ class MainInterface extends JFrame {
         addButton("UTILISATEURS", "/user_icon_white.png");
         addButton("Deconnexion", "/logout_icon.png");
 
-        // Création du panneau de contenu
+        // Création du panneau de contenu
         contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout());
         contentPanel.setBackground(Color.WHITE);
@@ -61,7 +61,7 @@ class MainInterface extends JFrame {
         // Initialisation avec le panneau de bienvenue
         contentPanel.add(new WelcomePanel(), BorderLayout.CENTER);
 
-        // Ajout des panneaux à la fenêtre principale
+        // Ajout des panneaux à la fenêtre principale
         add(sidePanel, BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
 
@@ -117,7 +117,7 @@ class MainInterface extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new MainInterface();
+                new LoginPanel();
             }
         });
     }

@@ -8,7 +8,7 @@ import java.awt.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.LinkedHashMap;
 public class DashboardPanel extends JPanel {
     private StatChart statChart;
     private JComboBox<String> periodComboBox;
@@ -44,7 +44,9 @@ public class DashboardPanel extends JPanel {
         Icon supplierIcon = UIManager.getIcon("OptionPane.questionIcon");
         Icon cashierIcon = UIManager.getIcon("OptionPane.errorIcon");
 
-        gbc.gridx = 1; gbc.gridy = 0;
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
         contentPanel.add(new StatCard("Ventes", ventes, salesIcon), gbc);
 
         gbc.gridx = 2;
@@ -56,16 +58,20 @@ public class DashboardPanel extends JPanel {
         gbc.gridx = 4;
         contentPanel.add(new StatCard("Caissiers", caissiers, cashierIcon), gbc);
 
+        /*
         JPanel periodPanel = new JPanel();
         periodPanel.setBackground(new Color(30, 30, 30));
-        periodComboBox = new JComboBox<>(new String[]{"Semaine", "Mois", "Année"});
+        periodComboBox = new JComboBox<>(new String[]{"Semaine", "Mois", "Année"});
         periodComboBox.setBackground(new Color(45, 45, 45));
         periodComboBox.setForeground(Color.WHITE);
         periodComboBox.addActionListener(e -> updateStatistics());
         periodPanel.add(periodComboBox);
 
-        gbc.gridx = 0; gbc.gridy = 5;
+        gbc.gridx = 0;
+        gbc.gridy = 5;
         contentPanel.add(periodPanel, gbc);
+
+         */
 
         add(contentPanel, BorderLayout.CENTER);
 
@@ -73,10 +79,13 @@ public class DashboardPanel extends JPanel {
         add(statChart, BorderLayout.SOUTH);
 
         updateStatistics();
+        setPreferredSize(new Dimension(800, 600)); // Ajustez la largeur selon vos besoins
+        setMinimumSize(new Dimension(800, 600));
     }
 
+
     private int getVentesCount() {
-        return executeCountQuery("SELECT COUNT(*) FROM TRANSACTIONS_G1J");
+        return executeCountQuery("SELECT COUNT(*) FROM TRANSACTION_G1J");
     }
 
     private int getStockQuantity() {
@@ -91,10 +100,11 @@ public class DashboardPanel extends JPanel {
         return executeCountQuery("SELECT COUNT(*) FROM UTILISATEUR_G1J");
     }
 
+
     private int executeCountQuery(String query) {
         int result = 0;
         String url = "jdbc:oracle:thin:@//localhost:1521/orcl";
-        String user =   "c##koulibaly";
+        String user = "c##koulibaly";
         String password = "1234567890";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
@@ -109,57 +119,49 @@ public class DashboardPanel extends JPanel {
         }
         return result;
     }
+    private Map<String, Integer> getTopSellingProducts() {
+        Map<String, Integer> salesData = new LinkedHashMap<>(); // Utilisation de LinkedHashMap pour garder l'ordre
 
-    private Map<String, Integer> getTopSellingProducts(String period) {
-        Map<String, Integer> salesData = new HashMap<>();
-        String query = "";
+        String query = """
+    SELECT PRODUIT_G1J.NOM_P, SUM(LIGNETRANSACTION.QUANTITE) AS TOTAL
+    FROM LIGNETRANSACTION
+    JOIN PRODUIT_G1J ON LIGNETRANSACTION.ID_P = PRODUIT_G1J.ID_P
+    GROUP BY PRODUIT_G1J.NOM_P
+    ORDER BY TOTAL DESC
+    """;
 
-        // Choix de la requête en fonction de la période sélectionnée
-        switch (period) {
-            case "Semaine":
-                query = "SELECT NOM_PRODUIT, SUM(QUANTITE_T) AS TOTAL " +
-                        "FROM TRANSACTIONS_G1J " +
-                        "WHERE DATE_T >= SYSDATE - 7 " +  // Filtrage pour la semaine (7 derniers jours)
-                        "GROUP BY NOM_PRODUIT ORDER BY TOTAL DESC";
-                break;
-            case "Mois":
-                query = "SELECT NOM_PRODUIT, SUM(QUANTITE_T) AS TOTAL " +
-                        "FROM TRANSACTIONS_G1J " +
-                        "WHERE DATE_T >= ADD_MONTHS(SYSDATE, -1) " +  // Filtrage pour le mois (30 derniers jours)
-                        "GROUP BY NOM_PRODUIT ORDER BY TOTAL DESC";
-                break;
-            case "Année":
-                query = "SELECT NOM_PRODUIT, SUM(QUANTITE_T) AS TOTAL " +
-                        "FROM TRANSACTIONS_G1J " +
-                        "WHERE DATE_T >= ADD_MONTHS(SYSDATE, -12) " +  // Filtrage pour l'année (12 derniers mois)
-                        "GROUP BY NOM_PRODUIT ORDER BY TOTAL DESC";
-                break;
-        }
-
-        // Connexion à la base de données et exécution de la requête
         String url = "jdbc:oracle:thin:@//localhost:1521/orcl";
-        String user =   "c##koulibaly";
+        String user = "c##koulibaly";
         String password = "1234567890";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
 
+            // Parcours les résultats pour ajouter chaque produit et sa quantité à salesData
             while (rs.next()) {
-                // Assurez-vous que le nom de la colonne est exactement "NOM_PRODUIT"
-                salesData.put(rs.getString("NOM_PRODUIT"), rs.getInt("TOTAL"));
+                String productName = rs.getString("NOM_P");
+                int total = rs.getInt("TOTAL");
+
+                // Si le produit existe déjà dans salesData, on ne l'ajoute pas à nouveau
+                salesData.put(productName, total);
             }
+
         } catch (SQLException e) {
             System.err.println("Erreur SQL : " + e.getMessage());
         }
 
+        System.out.println("Produits récupérés : " + salesData); // Debugging pour voir les résultats
         return salesData;
     }
 
 
+
     private void updateStatistics() {
-        String selectedPeriod = (String) periodComboBox.getSelectedItem();
-        Map<String, Integer> data = getTopSellingProducts(selectedPeriod);
+        Map<String, Integer> data = getTopSellingProducts();
+        System.out.println("Données récupérées : " + data);
         statChart.setData(data);
+
+
     }
 }
