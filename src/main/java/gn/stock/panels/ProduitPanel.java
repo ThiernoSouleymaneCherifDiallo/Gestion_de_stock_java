@@ -56,6 +56,8 @@ public class ProduitPanel extends Kpanel implements IProduit {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL; // Remplissage horizontal
+        gbc.weightx = 1.0; // Permet aux composants de s'étendre horizontalement
+        gbc.anchor = GridBagConstraints.WEST; // Alignement à gauche
 
         // Ajout des composants
         gbc.gridx = 0; // Colonne 0

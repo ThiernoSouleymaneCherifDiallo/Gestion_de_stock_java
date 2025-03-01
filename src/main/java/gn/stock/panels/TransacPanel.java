@@ -8,9 +8,12 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -42,13 +45,15 @@ public class TransacPanel extends Kpanel implements ITransaction {
     private int currentTransactionId; // Variable pour stocker l'ID de la transaction en cours
     private Timer refreshTimer;
     private JTextField transactionIdField;
+    private JButton afficherTransactionsButton;
+    private boolean showingTransactions = false; // Variable pour suivre l'état actuel
 
     public TransacPanel() {
         setLayout(new BorderLayout(20, 20)); // Utilisation de BorderLayout pour occuper tout l'espace
         setBackground(new Color(30, 30, 30)); // Couleur de fond sombre
 
         // Initialisation de la case à cocher
-        receiptCheckBox = new JCheckBox("Recevoir un reçu");
+        receiptCheckBox = new JCheckBox("Panier");
         receiptCheckBox.setBackground(new Color(45, 45, 45)); // Couleur de fond
         receiptCheckBox.setForeground(Color.WHITE); // Couleur du texte
 
@@ -70,6 +75,8 @@ public class TransacPanel extends Kpanel implements ITransaction {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL; // Remplissage horizontal
+        gbc.weightx = 1.0; // Permet aux composants de s'étendre horizontalement
+        gbc.anchor = GridBagConstraints.WEST; // Alignement à gauche
 
         // Ajout des composants
         gbc.gridx = 0;
@@ -108,12 +115,22 @@ public class TransacPanel extends Kpanel implements ITransaction {
         userComboBox = new JComboBox<>();
         inputPanel.add(userComboBox, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        inputPanel.add(receiptCheckBox, gbc);
+
+        // Panneau pour les boutons
+        JPanel buttonPanel = new JPanel(new GridBagLayout());
+        buttonPanel.setBackground(new Color(45, 45, 45));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+
         // Bouton pour ajouter un produit au tableau
-        addButton = new JButton("Ajouter");
+        addButton = new JButton("Ajouter au panier");
         addButton.setBackground(new Color(52, 152, 219)); // Couleur de fond bleue
         addButton.setForeground(Color.WHITE); // Couleur du texte
-        gbc.gridy = 5; // Ligne 5
-        inputPanel.add(addButton, gbc);
+        buttonPanel.add(addButton, gbc);
         addButton.addActionListener(e -> addProductToTable());
 
         // Bouton pour créer une transaction
@@ -122,8 +139,8 @@ public class TransacPanel extends Kpanel implements ITransaction {
         createButton = new JButton("Créer", new ImageIcon(scaledCreateIcon));
         createButton.setBackground(new Color(52, 152, 219)); // Couleur de fond bleue
         createButton.setForeground(Color.WHITE); // Couleur du texte
-        gbc.gridy = 6; // Ligne 6
-        inputPanel.add(createButton, gbc);
+        gbc.gridx = 1;
+        buttonPanel.add(createButton, gbc);
         createButton.addActionListener(e -> createTransation());
 
         // Bouton pour mettre à jour une transaction
@@ -132,8 +149,8 @@ public class TransacPanel extends Kpanel implements ITransaction {
         updateButton = new JButton("Modifier", new ImageIcon(scaledUpdateIcon));
         updateButton.setBackground(new Color(46, 204, 113)); // Couleur de fond verte
         updateButton.setForeground(Color.WHITE); // Couleur du texte
-        gbc.gridy = 7; // Ligne 7
-        inputPanel.add(updateButton, gbc);
+        gbc.gridx = 2;
+        buttonPanel.add(updateButton, gbc);
         updateButton.addActionListener(e -> updateTransaction());
 
         // Bouton pour supprimer une transaction
@@ -142,12 +159,37 @@ public class TransacPanel extends Kpanel implements ITransaction {
         deleteButton = new JButton("Supprimer", new ImageIcon(scaledDeleteIcon));
         deleteButton.setBackground(new Color(231, 76, 60)); // Couleur de fond rouge
         deleteButton.setForeground(Color.WHITE); // Couleur du texte
-        gbc.gridy = 8; // Ligne 8
-        inputPanel.add(deleteButton, gbc);
+        gbc.gridx = 3;
+        buttonPanel.add(deleteButton, gbc);
         deleteButton.addActionListener(e -> deleteTransaction());
 
-        // Ajout du panneau d'entrée à l'interface
+        // Initialisation du bouton "Afficher les transactions"
+        afficherTransactionsButton = new JButton("Afficher");
+        afficherTransactionsButton.setBackground(new Color(52, 152, 219)); // Couleur de fond bleue
+        afficherTransactionsButton.setForeground(Color.WHITE); // Couleur du texte
+        gbc.gridx = 4; // Assurez-vous que cette position ne chevauche pas d'autres composants
+        buttonPanel.add(afficherTransactionsButton, gbc);
+        afficherTransactionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (showingTransactions) {
+                    // Revenir à l'affichage du panier
+                    afficherPanier();
+                    afficherTransactionsButton.setText("Afficher");
+                    receiptCheckBox.setText("Panier");
+                } else {
+                    // Afficher les transactions
+                    afficherTransactions();
+                    afficherTransactionsButton.setText("Panier");
+                    receiptCheckBox.setText("Transaction");
+                }
+                showingTransactions = !showingTransactions; // Inverser l'état
+            }
+        });
+
+        // Ajout du panneau d'entrée et des boutons à l'interface
         add(inputPanel, BorderLayout.NORTH); // Ajout du panneau d'entrée en haut
+        add(buttonPanel, BorderLayout.SOUTH); // Ajout du panneau de boutons en bas
 
         // Ajout de la table à l'interface
         add(tableScrollPane, BorderLayout.CENTER); // Ajout du JScrollPane contenant la table
@@ -256,7 +298,7 @@ public class TransacPanel extends Kpanel implements ITransaction {
     }
 
     /**
-     * Crée une nouvelle transaction à partir des produits dans le tableau
+     * Crée une nouvelle transaction à partir des produits dans le tableau
      */
     @Override
     public void createTransation() {
@@ -268,10 +310,9 @@ public class TransacPanel extends Kpanel implements ITransaction {
             }
 
             int idUtilisateur = getUserIdByFullName(selectedUserFullName);
-            String typeTransaction = typeTransactionComboBox.getSelectedItem().toString().equalsIgnoreCase("Entrée") ? "entree" : "sortie";
+            String typeTransaction = typeTransactionComboBox.getSelectedItem().toString().equalsIgnoreCase("Entrée") ? "entree" : "sortie";
             boolean recus = receiptCheckBox.isSelected();
 
-            //Connection connection = getConnection(); // Utilisation de la connexion héritée de Kpanel
             connection.setAutoCommit(false);
 
             double montantTotal = 0;
@@ -301,6 +342,16 @@ public class TransacPanel extends Kpanel implements ITransaction {
                     int quantity = (int) tableModel.getValueAt(i, 2);
 
                     double prixUnitaire = getProductPrice(productId);
+
+                    // Vérification de la quantité disponible pour les sorties
+                    if (typeTransaction.equalsIgnoreCase("sortie")) {
+                        int availableQuantity = getAvailableQuantity(productId);
+                        if (quantity > availableQuantity) {
+                            JOptionPane.showMessageDialog(this, "Quantité demandée pour le produit " + tableModel.getValueAt(i, 1) + " dépasse la quantité disponible (" + availableQuantity + ").", "Erreur", JOptionPane.ERROR_MESSAGE);
+                            connection.rollback();
+                            return;
+                        }
+                    }
 
                     String sqlLigneTransaction = "INSERT INTO LIGNETRANSACTION (ID_T, ID_P, QUANTITE) VALUES (?, ?, ?)";
                     try (PreparedStatement stmtLigne = connection.prepareStatement(sqlLigneTransaction)) {
@@ -351,6 +402,21 @@ public class TransacPanel extends Kpanel implements ITransaction {
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Erreur lors de la création de la transaction : " + e.getMessage());
+        }
+    }
+
+    // Méthode pour obtenir la quantité disponible d'un produit
+    private int getAvailableQuantity(int productId) throws SQLException {
+        String query = "SELECT QUANTITE_P FROM PRODUIT_G1J WHERE ID_P = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("QUANTITE_P");
+                } else {
+                    throw new SQLException("Produit non trouvé avec l'ID : " + productId);
+                }
+            }
         }
     }
 
@@ -447,6 +513,55 @@ public class TransacPanel extends Kpanel implements ITransaction {
         JOptionPane.showMessageDialog(this, "Fonctionnalité d'affichage non encore implémentée");
     }
 
+    private void afficherPanier() {
+        // Mettre à jour l'en-tête du tableau pour le panier initial
+        tableModel.setColumnIdentifiers(new Object[]{"ID Produit", "Nom du Produit", "Quantité du Produit", "Nom Utilisateur"});
+
+        // Effacer les lignes existantes dans le modèle de tableau
+        tableModel.setRowCount(0);
+
+        // Logique pour remplir le tableau avec les données du panier initial
+        // Par exemple, vous pouvez réutiliser les données précédemment ajoutées au tableau
+    }
+
+    private void afficherTransactions() {
+        // Mettre à jour l'en-tête du tableau pour inclure le produit et la quantité
+        tableModel.setColumnIdentifiers(new Object[]{"ID Transaction", "ID Utilisateur", "Produit", "Quantité", "Montant", "Type", "Reçu"});
+
+        // Effacer les lignes existantes dans le modèle de tableau
+        tableModel.setRowCount(0);
+
+        String query = "SELECT T.ID_T, T.ID_UTILISATEUR, P.NOM_P, LT.QUANTITE, T.MONTANT_T, T.TYPE_T, T.RECUS " +
+                       "FROM TRANSACTION_G1J T " +
+                       "JOIN LIGNETRANSACTION LT ON T.ID_T = LT.ID_T " +
+                       "JOIN PRODUIT_G1J P ON LT.ID_P = P.ID_P";
+
+        if (connection == null) {
+            JOptionPane.showMessageDialog(this, "Connexion à la base de données non établie !");
+            return;
+        }
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                int idTransaction = rs.getInt("ID_T");
+                int idUtilisateur = rs.getInt("ID_UTILISATEUR");
+                String nomProduit = rs.getString("NOM_P");
+                int quantite = rs.getInt("QUANTITE");
+                double montant = rs.getDouble("MONTANT_T");
+                String type = rs.getString("TYPE_T");
+                boolean recus = rs.getBoolean("RECUS");
+
+                // Ajoutez les données récupérées au modèle de tableau
+                tableModel.addRow(new Object[]{idTransaction, idUtilisateur, nomProduit, quantite, montant, type, recus});
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Erreur lors de la récupération des transactions !");
+        }
+    }
 
     public static void main(String[] args) {
         new TransacPanel();

@@ -39,6 +39,7 @@ public class UtilisateurPanel extends Kpanel {
     private JPasswordField passwordField, confirmPasswordField;
     private JTable userTable;
     private DefaultTableModel tableModel;
+    private JScrollPane scrollPane;
 
     // Les méthodes écrites par Big dans la classe Query.java
     public boolean insertUser(String nom, String prenom, String tel, String adresse, String email, String role, String password) {
@@ -139,15 +140,18 @@ public class UtilisateurPanel extends Kpanel {
     // Les méthodes définies par Big dans le fichier UserFram
 
     public UtilisateurPanel() {
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(20, 20)); // Utilisation de BorderLayout pour occuper tout l'espace
         setBackground(new Color(30, 30, 30)); // Couleur de fond sombre
 
+        // Panneau pour les champs de saisie
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau d'entrée
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.anchor = GridBagConstraints.WEST; // Alignement à gauche
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Remplissage horizontal
 
+        // Ajout des composants du formulaire
         gbc.gridx = 0; gbc.gridy = 0;
         panel.add(createLabel("Nom:"), gbc);
         nomField = new JTextField(15);
@@ -197,31 +201,29 @@ public class UtilisateurPanel extends Kpanel {
         gbc.gridx = 1;
         panel.add(confirmPasswordField, gbc);
 
-        JButton addButton = new JButton("Ajouter");
-        addButton.setBackground(new Color(52, 152, 219));
-        addButton.setForeground(Color.WHITE);
+        // Panneau de recherche
+        JPanel searchPanel = new JPanel();
+        searchPanel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau de recherche
+        searchPanel.add(createLabel("Rechercher:"));
+        searchField = new JTextField(20);
+        searchPanel.add(searchField);
 
-        JButton updateButton = new JButton("Modifier");
-        updateButton.setBackground(new Color(46, 204, 113));
-        updateButton.setForeground(Color.WHITE);
+        // Panneau parent pour le formulaire et la recherche
+        JPanel topPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints topGbc = new GridBagConstraints();
+        topGbc.insets = new Insets(5, 5, 5, 5);
+        topGbc.gridx = 0;
+        topGbc.gridy = 0;
+        topGbc.anchor = GridBagConstraints.NORTHWEST;
+        topGbc.fill = GridBagConstraints.HORIZONTAL;
+        topGbc.weightx = 1.0; // Permet au panneau de s'étendre horizontalement
+        topPanel.setBackground(new Color(45, 45, 45)); // Assurez-vous que le topPanel a un fond
+        topPanel.add(panel, topGbc);
 
-        JButton deleteButton = new JButton("Supprimer");
-        deleteButton.setBackground(new Color(231, 76, 60));
-        deleteButton.setForeground(Color.WHITE);
+        topGbc.gridy = 1;
+        topPanel.add(searchPanel, topGbc);
 
-        JButton resetPasswordButton = new JButton("Réinitialiser MDP");
-        resetPasswordButton.setBackground(new Color(155, 89, 182));
-        resetPasswordButton.setForeground(Color.WHITE);
-
-        gbc.gridx = 0; gbc.gridy = 8;
-        panel.add(addButton, gbc);
-        gbc.gridx = 1;
-        panel.add(updateButton, gbc);
-        gbc.gridx = 0; gbc.gridy = 9;
-        panel.add(deleteButton, gbc);
-        gbc.gridx = 1;
-        panel.add(resetPasswordButton, gbc);
-
+        // Initialisation du tableau et du JScrollPane
         String[] columnNames = {"ID", "Nom", "Prénom", "Téléphone", "Adresse", "Email", "Rôle", "Mot de passe"};
         tableModel = new DefaultTableModel(columnNames, 0);
         userTable = new JTable(tableModel);
@@ -229,19 +231,46 @@ public class UtilisateurPanel extends Kpanel {
         userTable.setForeground(Color.WHITE); // Couleur du texte du tableau
         userTable.setGridColor(new Color(70, 70, 70)); // Couleur des lignes de grille
 
-        JScrollPane scrollPane = new JScrollPane(userTable);
+        scrollPane = new JScrollPane(userTable); // Initialisation de scrollPane
         scrollPane.getViewport().setBackground(new Color(50, 50, 50)); // Couleur de fond du viewport
 
-        searchField = new JTextField(20);
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBackground(new Color(45, 45, 45)); // Couleur de fond du panneau de recherche
-        searchPanel.add(createLabel("Rechercher:"));
-        searchPanel.add(searchField);
+        // Panneau pour les boutons
+        JPanel buttonPanel = new JPanel(new GridBagLayout());
+        buttonPanel.setBackground(new Color(45, 45, 45));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
-        add(panel, BorderLayout.WEST);
-        add(scrollPane, BorderLayout.CENTER);
-        add(searchPanel, BorderLayout.NORTH);
+        // Boutons
+        JButton addButton = new JButton("Ajouter");
+        addButton.setBackground(new Color(52, 152, 219));
+        addButton.setForeground(Color.WHITE);
+        buttonPanel.add(addButton, gbc);
 
+        gbc.gridx = 1;
+        JButton updateButton = new JButton("Modifier");
+        updateButton.setBackground(new Color(46, 204, 113));
+        updateButton.setForeground(Color.WHITE);
+        buttonPanel.add(updateButton, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        JButton deleteButton = new JButton("Supprimer");
+        deleteButton.setBackground(new Color(231, 76, 60));
+        deleteButton.setForeground(Color.WHITE);
+        buttonPanel.add(deleteButton, gbc);
+
+        gbc.gridx = 1;
+        JButton resetPasswordButton = new JButton("Réinitialiser MDP");
+        resetPasswordButton.setBackground(new Color(155, 89, 182));
+        resetPasswordButton.setForeground(Color.WHITE);
+        buttonPanel.add(resetPasswordButton, gbc);
+
+        // Ajout des panneaux à l'interface
+        add(topPanel, BorderLayout.NORTH); // Formulaire et recherche en haut
+        add(scrollPane, BorderLayout.CENTER); // Tableau au centre
+        add(buttonPanel, BorderLayout.SOUTH); // Boutons en bas
+
+        // Ajout des écouteurs d'événements
         addButton.addActionListener(this::addUser);
         updateButton.addActionListener(e -> updateUser());
         deleteButton.addActionListener(e -> deleteUser());

@@ -34,7 +34,7 @@ class MainInterface extends JFrame {
         setLayout(new BorderLayout());
 
         // Bloquer le redimensionnement de la fenêtre
-        setResizable(false);
+        // setResizable(false);
 
         // Centrer la fenêtre à l'écran
         setLocationRelativeTo(null);
@@ -100,6 +100,13 @@ class MainInterface extends JFrame {
             contentPanel.add(new TransacPanel(), BorderLayout.CENTER);
         } else if (text.equals("GESTION_STOCK")) {
             contentPanel.add(new DashboardPanel(), BorderLayout.CENTER);
+        } else if (text.equals("Deconnexion")) {
+            // Fermer la fenêtre actuelle et ouvrir LoginPanel
+            SwingUtilities.invokeLater(() -> {
+                new LoginPanel(); // Ouvrir la fenêtre de connexion
+                dispose(); // Fermer la fenêtre actuelle
+            });
+            return; // Sortir de la méthode pour éviter de revalider le contentPanel
         }
 
         contentPanel.revalidate();
